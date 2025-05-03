@@ -39,6 +39,60 @@
         }
       }
 
+      .members {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+
+        .memberItem {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px;
+          border-radius: 5px;
+          background-color: rgba(17, 25, 40, 0.3);
+
+          .memberDetail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            img {
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              object-fit: cover;
+            }
+
+            span {
+              font-size: 14px;
+              color: white;
+            }
+
+            .you {
+              color: #5183fe;
+              font-size: 12px;
+              font-style: italic;
+            }
+          }
+
+          .removeBtn {
+            padding: 6px 12px;
+            background-color: rgba(230, 74, 105, 0.553);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+
+            &:hover {
+              background-color: rgba(220, 20, 60, 0.796);
+            }
+          }
+        }
+      }
+
       .photos {
         display: flex;
         flex-direction: column;

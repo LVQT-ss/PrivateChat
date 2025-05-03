@@ -7,6 +7,10 @@ import {
   getDoc,
   onSnapshot,
   updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useChatStore } from "../../lib/chatStore";
@@ -15,6 +19,9 @@ import upload from "../../lib/upload";
 
 const Chat = () => {
   const [chat, setChat] = useState();
+  const [isRoom, setIsRoom] = useState(false);
+  const [roomDetails, setRoomDetails] = useState(null);
+  const [roomMembers, setRoomMembers] = useState([]);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [img, setImg] = useState({
@@ -23,7 +30,7 @@ const Chat = () => {
   });
 
   const { currentUser } = useUserStore();
-  const { chatId, user, isCurrentUserBlocked, isReceiverBlocked } =
+  const { chatId, user, isCurrentUserBlocked, isReceiverBlocked, isRoomChat } =
     useChatStore();
 
   const endRef = useRef(null);
@@ -32,15 +39,57 @@ const Chat = () => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.messages]);
 
+  // Determine if this is a room chat
   useEffect(() => {
-    const unSub = onSnapshot(doc(db, "chats", chatId), (res) => {
-      setChat(res.data());
-    });
+    setIsRoom(isRoomChat || false);
+  }, [isRoomChat]);
+
+  // Load chat/room messages
+  useEffect(() => {
+    if (!chatId) return;
+
+    const unSub = onSnapshot(
+      doc(db, isRoom ? "chatRooms" : "chats", chatId),
+      (res) => {
+        if (res.exists()) {
+          setChat(res.data());
+
+          // If this is a room, store room details
+          if (isRoom) {
+            setRoomDetails(res.data());
+          }
+        }
+      }
+    );
 
     return () => {
       unSub();
     };
-  }, [chatId]);
+  }, [chatId, isRoom]);
+
+  // Load room members if this is a room chat
+  useEffect(() => {
+    if (!isRoom || !roomDetails || !roomDetails.members) return;
+
+    const fetchRoomMembers = async () => {
+      try {
+        const membersPromises = roomDetails.members.map(async (memberId) => {
+          const memberDoc = await getDoc(doc(db, "users", memberId));
+          if (memberDoc.exists()) {
+            return { id: memberId, ...memberDoc.data() };
+          }
+          return null;
+        });
+
+        const members = (await Promise.all(membersPromises)).filter(Boolean);
+        setRoomMembers(members);
+      } catch (error) {
+        console.error("Error fetching room members:", error);
+      }
+    };
+
+    fetchRoomMembers();
+  }, [isRoom, roomDetails]);
 
   const handleEmoji = (e) => {
     setText((prev) => prev + e.emoji);
@@ -66,38 +115,50 @@ const Chat = () => {
         imgUrl = await upload(img.file);
       }
 
-      await updateDoc(doc(db, "chats", chatId), {
-        messages: arrayUnion({
-          senderId: currentUser.id,
-          text,
-          createdAt: new Date(),
-          ...(imgUrl && { img: imgUrl }),
-        }),
-      });
+      const messageData = {
+        senderId: currentUser.id,
+        text,
+        createdAt: new Date(),
+        ...(imgUrl && { img: imgUrl }),
+      };
 
-      const userIDs = [currentUser.id, user.id];
+      if (isRoom) {
+        // Handle room message
+        await updateDoc(doc(db, "chatRooms", chatId), {
+          messages: arrayUnion(messageData),
+          lastMessage: text,
+          lastMessageAt: new Date(),
+        });
+      } else {
+        // Handle direct message
+        await updateDoc(doc(db, "chats", chatId), {
+          messages: arrayUnion(messageData),
+        });
 
-      userIDs.forEach(async (id) => {
-        const userChatsRef = doc(db, "userchats", id);
-        const userChatsSnapshot = await getDoc(userChatsRef);
+        const userIDs = [currentUser.id, user.id];
 
-        if (userChatsSnapshot.exists()) {
-          const userChatsData = userChatsSnapshot.data();
+        userIDs.forEach(async (id) => {
+          const userChatsRef = doc(db, "userchats", id);
+          const userChatsSnapshot = await getDoc(userChatsRef);
 
-          const chatIndex = userChatsData.chats.findIndex(
-            (c) => c.chatId === chatId
-          );
+          if (userChatsSnapshot.exists()) {
+            const userChatsData = userChatsSnapshot.data();
 
-          userChatsData.chats[chatIndex].lastMessage = text;
-          userChatsData.chats[chatIndex].isSeen =
-            id === currentUser.id ? true : false;
-          userChatsData.chats[chatIndex].updatedAt = Date.now();
+            const chatIndex = userChatsData.chats.findIndex(
+              (c) => c.chatId === chatId
+            );
 
-          await updateDoc(userChatsRef, {
-            chats: userChatsData.chats,
-          });
-        }
-      });
+            userChatsData.chats[chatIndex].lastMessage = text;
+            userChatsData.chats[chatIndex].isSeen =
+              id === currentUser.id ? true : false;
+            userChatsData.chats[chatIndex].updatedAt = Date.now();
+
+            await updateDoc(userChatsRef, {
+              chats: userChatsData.chats,
+            });
+          }
+        });
+      }
     } catch (err) {
       console.log(err);
     }
@@ -114,27 +175,51 @@ const Chat = () => {
     <div className="chat">
       <div className="top">
         <div className="user">
-          <img src={user?.avatar || "./avatar.png"} alt="" />
+          <img
+            src={isRoom ? "./room.png" : user?.avatar || "./avatar.png"}
+            alt=""
+          />
           <div className="texts">
-            <span>{user?.username}</span>
-            <p>Lorem ipsum dolor, sit amet.</p>
+            <span>{isRoom ? roomDetails?.name : user?.username}</span>
+            <p>{isRoom ? `${roomMembers.length} members` : "Direct message"}</p>
           </div>
         </div>
         <div className="icons">
-          <img src="./phone.png" alt="" />
-          <img src="./video.png" alt="" />
+          {!isRoom && (
+            <>
+              <img src="./phone.png" alt="" />
+              <img src="./video.png" alt="" />
+            </>
+          )}
           <img src="./info.png" alt="" />
         </div>
       </div>
       <div className="center">
-        {chat?.messages?.map((message) => (
+        {chat?.messages?.map((message, index) => (
           <div
             className={
               message.senderId === currentUser?.id ? "message own" : "message"
             }
-            key={message?.createAt}
+            key={`${message.senderId}-${index}`}
           >
+            {message.senderId !== currentUser?.id && (
+              <img
+                src={
+                  isRoom
+                    ? roomMembers.find((m) => m.id === message.senderId)
+                        ?.avatar || "./avatar.png"
+                    : user?.avatar || "./avatar.png"
+                }
+                alt=""
+              />
+            )}
             <div className="texts">
+              {isRoom && message.senderId !== currentUser?.id && (
+                <span className="senderName">
+                  {roomMembers.find((m) => m.id === message.senderId)
+                    ?.username || "User"}
+                </span>
+              )}
               {message.img && <img src={message.img} alt="" />}
               <p>{message.text}</p>
               {/* <span>{message}</span> */}
@@ -167,13 +252,15 @@ const Chat = () => {
         <input
           type="text"
           placeholder={
-            isCurrentUserBlocked || isReceiverBlocked
+            isRoom
+              ? "Type a message to room..."
+              : isCurrentUserBlocked || isReceiverBlocked
               ? "You cannot send a message"
               : "Type a message..."
           }
           value={text}
           onChange={(e) => setText(e.target.value)}
-          disabled={isCurrentUserBlocked || isReceiverBlocked}
+          disabled={!isRoom && (isCurrentUserBlocked || isReceiverBlocked)}
         />
         <div className="emoji">
           <img
@@ -188,7 +275,7 @@ const Chat = () => {
         <button
           className="sendButton"
           onClick={handleSend}
-          disabled={isCurrentUserBlocked || isReceiverBlocked}
+          disabled={!isRoom && (isCurrentUserBlocked || isReceiverBlocked)}
         >
           Send
         </button>

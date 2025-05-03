@@ -6,46 +6,56 @@ export const useChatStore = create((set) => ({
     user: null,
     isCurrentUserBlocked: false,
     isReceiverBlocked: false,
-    changeChat: (chatId, user) => {
+    isRoomChat: false,  // Renamed from isRoom to isRoomChat for consistency
+
+    changeChat: (chatId, user, isRoom = false) => {
         const currentUser = useUserStore.getState().currentUser;
 
         // CHECK IF CURRENT USER IS BLOCKED
-        if (user.blocked.includes(currentUser.id)) {
+        if (user?.blocked?.includes(currentUser?.id)) {
             return set({
                 chatId,
-                user: null,
+                user,
                 isCurrentUserBlocked: true,
                 isReceiverBlocked: false,
+                isRoomChat: isRoom
             });
         }
-
         // CHECK IF RECEIVER IS BLOCKED
-        else if (currentUser.blocked.includes(user.id)) {
+        else if (currentUser?.blocked?.includes(user?.id)) {
             return set({
                 chatId,
-                user: user,
+                user,
                 isCurrentUserBlocked: false,
                 isReceiverBlocked: true,
+                isRoomChat: isRoom
             });
-        } else {
+        }
+        else {
             return set({
                 chatId,
                 user,
                 isCurrentUserBlocked: false,
                 isReceiverBlocked: false,
+                isRoomChat: isRoom
             });
         }
     },
 
     changeBlock: () => {
-        set((state) => ({ ...state, isReceiverBlocked: !state.isReceiverBlocked }));
+        set((state) => ({
+            ...state,
+            isReceiverBlocked: !state.isReceiverBlocked
+        }));
     },
+
     resetChat: () => {
         set({
             chatId: null,
             user: null,
             isCurrentUserBlocked: false,
             isReceiverBlocked: false,
+            isRoomChat: false
         });
     },
 }));

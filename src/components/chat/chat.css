@@ -91,6 +91,12 @@
         flex-direction: column;
         gap: 5px;
 
+        .senderName {
+          font-size: 12px;
+          font-weight: 500;
+          color: #a5a5a5;
+        }
+
         img {
           width: 100%;
           height: 300px;

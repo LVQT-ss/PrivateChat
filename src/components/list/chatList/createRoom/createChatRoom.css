@@ -1,0 +1,224 @@
+.createChatRoom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.createChatRoomContainer {
+  background-color: #1e2a47;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  color: white;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.createChatRoomHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #3a4765;
+  padding-bottom: 10px;
+}
+
+.createChatRoomHeader h3 {
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #ffffff;
+  padding: 5px;
+  transition: color 0.3s;
+}
+
+.closeButton:hover {
+  color: #ff3333;
+}
+
+.inputGroup {
+  margin-bottom: 15px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #3a4765;
+  background-color: rgba(17, 25, 40, 0.7);
+  border-radius: 5px;
+  font-size: 14px;
+  color: white;
+}
+
+.privateToggle {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.privateToggle label {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.privateToggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.createRoomBtn {
+  width: 100%;
+  padding: 10px;
+  background-color: #5183fe;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 15px;
+}
+
+.createRoomBtn:hover {
+  background-color: #4173ee;
+}
+
+.createRoomBtn:disabled {
+  background-color: #a4b7e0;
+  cursor: not-allowed;
+}
+
+/* New styles for user search and selection */
+.searchUserSection {
+  margin-bottom: 15px;
+}
+
+.searchUserSection label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.userSearchInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #3a4765;
+  background-color: rgba(17, 25, 40, 0.7);
+  border-radius: 5px;
+  font-size: 14px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.selectedUsersContainer {
+  margin-bottom: 10px;
+}
+
+.selectedUsersTitle {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #b0b0b0;
+}
+
+.selectedUsersList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.selectedUserChip {
+  display: flex;
+  align-items: center;
+  background-color: #5183fe;
+  border-radius: 15px;
+  padding: 5px 10px;
+  font-size: 12px;
+  gap: 5px;
+}
+
+.removeUserBtn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userListContainer {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #3a4765;
+  border-radius: 5px;
+  background-color: rgba(17, 25, 40, 0.5);
+}
+
+.userItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #3a4765;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.userItem:last-child {
+  border-bottom: none;
+}
+
+.userItem:hover {
+  background-color: rgba(81, 131, 254, 0.2);
+}
+
+.userItem.selected {
+  background-color: rgba(81, 131, 254, 0.3);
+}
+
+.userDetail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userDetail img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.selectIndicator {
+  font-weight: bold;
+  color: #5183fe;
+}
+
+.noUsersFound {
+  padding: 15px;
+  text-align: center;
+  color: #b0b0b0;
+}
