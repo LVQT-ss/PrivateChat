@@ -64,6 +64,11 @@ const ChatList = () => {
     }
   };
 
+  // Function to close the AddUser component
+  const handleCloseAddUser = () => {
+    setAddMode(false);
+  };
+
   const filteredChats = chats.filter((c) =>
     c.user.username.toLowerCase().includes(input.toLowerCase())
   );
@@ -114,7 +119,7 @@ const ChatList = () => {
         </div>
       ))}
 
-      {addMode && <AddUser />}
+      {addMode && <AddUser onClose={handleCloseAddUser} />}
     </div>
   );
 };

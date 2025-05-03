@@ -15,7 +15,8 @@ import {
 import { useState } from "react";
 import { useUserStore } from "../../../../lib/userStore";
 
-const AddUser = () => {
+const AddUser = ({ onClose }) => {
+  // Add onClose prop
   const [user, setUser] = useState(null);
 
   const { currentUser } = useUserStore();
@@ -69,6 +70,9 @@ const AddUser = () => {
           updatedAt: Date.now(),
         }),
       });
+
+      // Close the component after adding a user
+      onClose();
     } catch (err) {
       console.log(err);
     }
@@ -76,6 +80,12 @@ const AddUser = () => {
 
   return (
     <div className="addUser">
+      <div className="addUserHeader">
+        <h3>Add New User</h3>
+        <button className="closeButton" onClick={onClose}>
+          ✕
+        </button>
+      </div>
       <form onSubmit={handleSearch}>
         <input type="text" placeholder="Username" name="username" />
         <button>Search</button>
