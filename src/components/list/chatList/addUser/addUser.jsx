@@ -1,47 +1,53 @@
 import "./addUser.css";
 import { db } from "../../../../lib/firebase";
 import {
-  arrayUnion,
   collection,
   doc,
-  getDoc,
   getDocs,
-  query,
   serverTimestamp,
   setDoc,
   updateDoc,
-  where,
+  arrayUnion,
 } from "firebase/firestore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserStore } from "../../../../lib/userStore";
 
 const AddUser = ({ onClose }) => {
-  // Add onClose prop
-  const [user, setUser] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
 
   const { currentUser } = useUserStore();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const username = formData.get("username");
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const userChatsSnap = await getDocs(collection(db, "userchats"));
+        const addedChatIds =
+          userChatsSnap.docs
+            .find((doc) => doc.id === currentUser.id)
+            ?.data()
+            ?.chats?.map((chat) => chat.receiverId) || [];
 
-    try {
-      const userRef = collection(db, "users");
+        const users = usersSnapshot.docs
+          .map((doc) => ({ ...doc.data(), id: doc.id }))
+          .filter(
+            (user) =>
+              user.id !== currentUser.id && !addedChatIds.includes(user.id)
+          );
 
-      const q = query(userRef, where("username", "==", username));
-
-      const querySnapShot = await getDocs(q);
-
-      if (!querySnapShot.empty) {
-        setUser(querySnapShot.docs[0].data());
+        setAllUsers(users);
+        setFilteredUsers(users);
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    };
 
-  const handleAdd = async () => {
+    fetchUsers();
+  }, [currentUser.id]);
+
+  const handleAdd = async (user) => {
     const chatRef = collection(db, "chats");
     const userChatsRef = collection(db, "userchats");
 
@@ -71,11 +77,19 @@ const AddUser = ({ onClose }) => {
         }),
       });
 
-      // Close the component after adding a user
-      onClose();
+      // Remove the user from the UI list after adding
+      setFilteredUsers((prev) => prev.filter((u) => u.id !== user.id));
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchInput(value);
+    setFilteredUsers(
+      allUsers.filter((u) => u.username.toLowerCase().includes(value))
+    );
   };
 
   return (
@@ -86,19 +100,24 @@ const AddUser = ({ onClose }) => {
           ✕
         </button>
       </div>
-      <form onSubmit={handleSearch}>
-        <input type="text" placeholder="Username" name="username" />
-        <button>Search</button>
-      </form>
-      {user && (
-        <div className="user">
-          <div className="detail">
-            <img src={user.avatar || "./avatar.png"} alt="" />
-            <span>{user.username}</span>
+      <input
+        type="text"
+        placeholder="Search users..."
+        value={searchInput}
+        onChange={handleSearchChange}
+      />
+      <div className="userList">
+        {filteredUsers.map((user) => (
+          <div className="user" key={user.id}>
+            <div className="detail">
+              <img src={user.avatar || "./avatar.png"} alt="" />
+              <span>{user.username}</span>
+            </div>
+            <button onClick={() => handleAdd(user)}>Add</button>
           </div>
-          <button onClick={handleAdd}>Add User</button>
-        </div>
-      )}
+        ))}
+        {filteredUsers.length === 0 && <p>No users found.</p>}
+      </div>
     </div>
   );
 };
